@@ -5,22 +5,22 @@ import { requireAdmin } from "@/lib/admin-auth";
 
 const patchSchema = z.object({
   id: z.string().uuid(),
-  status: z.enum(["received", "preparing", "ready", "out_for_delivery", "delivered", "cancelled"]).optional(),
-  paymentStatus: z.enum(["pending", "paid"]).optional()
-}).refine((value) => value.status || value.paymentStatus, { message: "No update" });
+  status: z.enum(["new", "reviewing", "contacted", "accepted", "rejected"]).optional(),
+  adminNotes: z.string().trim().max(1000).nullable().optional()
+}).refine((value) => value.status !== undefined || value.adminNotes !== undefined, { message: "No update" });
 
 export async function GET(request: NextRequest) {
   const admin = await requireAdmin(request);
   if (!admin) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
   const { data, error } = await admin.supabase
-    .from("orders")
-    .select("*, order_items(*), order_status_history(*), invoices(*)")
+    .from("job_applications")
+    .select("*")
     .order("created_at", { ascending: false })
     .limit(250);
 
   if (error) return NextResponse.json({ error: "Chargement impossible" }, { status: 500 });
-  return NextResponse.json({ orders: data || [] });
+  return NextResponse.json({ applications: data || [] });
 }
 
 export async function PATCH(request: NextRequest) {
@@ -34,17 +34,17 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Modification invalide" }, { status: 400 });
   }
 
-  const updates: Record<string, string> = {};
+  const updates: { status?: string; admin_notes?: string | null } = {};
   if (payload.status) updates.status = payload.status;
-  if (payload.paymentStatus) updates.payment_status = payload.paymentStatus;
+  if (payload.adminNotes !== undefined) updates.admin_notes = payload.adminNotes || null;
 
   const { data, error } = await admin.supabase
-    .from("orders")
+    .from("job_applications")
     .update(updates)
     .eq("id", payload.id)
-    .select("*, order_items(*), order_status_history(*), invoices(*)")
+    .select("*")
     .single();
 
   if (error) return NextResponse.json({ error: "Mise à jour impossible" }, { status: 500 });
-  return NextResponse.json({ order: data });
+  return NextResponse.json({ application: data });
 }

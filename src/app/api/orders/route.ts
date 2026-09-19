@@ -6,14 +6,15 @@ import type { Order } from "@/lib/types";
 
 const orderSchema = z.object({
   customerName: z.string().trim().min(2).max(80),
-  phone: z.string().trim().min(7).max(24),
+  phone: z.string().trim().min(4).max(20).refine((value) => value.replace(/\D/g, "").length >= 4),
   deliveryLocation: z.string().trim().min(2).max(160),
+  desiredDeliveryAt: z.string().datetime().nullable().optional().default(null),
   notes: z.string().trim().max(500).optional().default(""),
   website: z.string().max(0).optional().default(""),
   paymentMethod: z.enum(["cash", "card"]),
   items: z.array(z.object({
     productId: z.string().uuid(),
-    quantity: z.number().int().min(1).max(50)
+    quantity: z.number().int().min(1).max(999)
   })).min(1).max(20)
 });
 
@@ -37,6 +38,7 @@ export async function POST(request: Request) {
     p_customer_name: payload.customerName,
     p_phone: payload.phone,
     p_delivery_location: payload.deliveryLocation,
+    p_desired_delivery_at: payload.desiredDeliveryAt,
     p_payment_method: payload.paymentMethod,
     p_notes: payload.notes || null,
     p_items: payload.items.map((item) => ({ product_id: item.productId, quantity: item.quantity }))

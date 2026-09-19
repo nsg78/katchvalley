@@ -14,9 +14,22 @@ export function AdminLogin() {
   const supabase = getBrowserClient();
 
   useEffect(() => {
-    supabase?.auth.getSession().then(({ data }) => {
-      if (data.session) router.replace("/admin/dashboard");
+    let errorFrame = 0;
+    if (new URLSearchParams(window.location.search).get("error") === "unauthorized") {
+      errorFrame = window.requestAnimationFrame(() => {
+        setError("Session refusée. Vérifiez que ce compte figure bien dans la table admin_profiles.");
+      });
+    }
+    supabase?.auth.getSession().then(async ({ data }) => {
+      if (!data.session) return;
+      const response = await fetch("/api/admin/me", {
+        headers: { Authorization: `Bearer ${data.session.access_token}` },
+        cache: "no-store"
+      });
+      if (response.ok) router.replace("/admin/dashboard");
+      else await supabase.auth.signOut();
     });
+    return () => window.cancelAnimationFrame(errorFrame);
   }, [router, supabase]);
 
   async function login(event: React.FormEvent<HTMLFormElement>) {
@@ -31,13 +44,24 @@ export function AdminLogin() {
       return;
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: String(form.get("email")),
       password: String(form.get("password"))
     });
 
     if (signInError) {
       setError("Identifiants incorrects ou accès non autorisé.");
+      setLoading(false);
+      return;
+    }
+
+    const accessResponse = await fetch("/api/admin/me", {
+      headers: { Authorization: `Bearer ${signInData.session.access_token}` },
+      cache: "no-store"
+    });
+    if (!accessResponse.ok) {
+      await supabase.auth.signOut();
+      setError("Connexion valide, mais ce compte n’est pas déclaré dans admin_profiles.");
       setLoading(false);
       return;
     }

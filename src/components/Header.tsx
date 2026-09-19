@@ -22,6 +22,7 @@ export function Header({ compact = false }: { compact?: boolean }) {
         <nav className={menuOpen ? "main-nav is-open" : "main-nav"} aria-label="Navigation principale">
           <Link href="/#cuvees" onClick={() => setMenuOpen(false)}>Nos cuvées</Link>
           <Link href="/suivi" onClick={() => setMenuOpen(false)}>Suivre ma commande</Link>
+          <Link href="/recrutement" onClick={() => setMenuOpen(false)}>Recrutement</Link>
           <Link className="admin-link" href="/admin" onClick={() => setMenuOpen(false)}>Administration</Link>
         </nav>
         <div className="header-actions">

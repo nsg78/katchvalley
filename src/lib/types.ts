@@ -1,5 +1,7 @@
 export type PaymentMethod = "cash" | "card";
 export type PaymentStatus = "pending" | "paid";
+export type ApplicationRole = "delivery_driver" | "order_preparer" | "account_manager";
+export type ApplicationStatus = "new" | "reviewing" | "contacted" | "accepted" | "rejected";
 export type OrderStatus =
   | "received"
   | "preparing"
@@ -46,12 +48,39 @@ export type StatusHistory = {
   created_at: string;
 };
 
+export type Invoice = {
+  id: string;
+  order_id: string;
+  invoice_number: string;
+  issued_at: string;
+  customer_name: string;
+  customer_phone: string;
+  delivery_location: string;
+  payment_method: PaymentMethod;
+  total: number;
+};
+
+export type JobApplication = {
+  id: string;
+  applicant_name: string;
+  phone: string;
+  role: ApplicationRole;
+  availability: string;
+  experience: string | null;
+  motivation: string;
+  status: ApplicationStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Order = {
   id: string;
   order_number: string;
   customer_name: string;
   phone: string;
   delivery_location: string;
+  desired_delivery_at: string | null;
   notes: string | null;
   payment_method: PaymentMethod;
   payment_status: PaymentStatus;
@@ -61,6 +90,7 @@ export type Order = {
   updated_at: string;
   order_items: OrderItem[];
   order_status_history?: StatusHistory[];
+  invoices?: Invoice[];
 };
 
 export const STATUS_LABELS: Record<OrderStatus, string> = {
@@ -79,3 +109,17 @@ export const STATUS_STEPS: OrderStatus[] = [
   "out_for_delivery",
   "delivered"
 ];
+
+export const APPLICATION_ROLE_LABELS: Record<ApplicationRole, string> = {
+  delivery_driver: "Livreur",
+  order_preparer: "Préparateur de commande",
+  account_manager: "Chargé d’affaires"
+};
+
+export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
+  new: "Nouvelle",
+  reviewing: "À étudier",
+  contacted: "Contactée",
+  accepted: "Retenue",
+  rejected: "Refusée"
+};

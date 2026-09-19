@@ -1,7 +1,8 @@
 "use client";
 
-import { PackageSearch, Phone, RefreshCw } from "lucide-react";
+import { FileText, PackageSearch, Phone, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
+import { InvoiceView } from "@/components/InvoiceView";
 import { StatusBadge } from "@/components/StatusBadge";
 import { STATUS_STEPS, type Order } from "@/lib/types";
 import { formatDate, formatMoney } from "@/lib/utils";
@@ -11,6 +12,7 @@ export function TrackOrder() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -44,7 +46,7 @@ export function TrackOrder() {
     <div className="tracking-shell">
       <form className="tracking-search" onSubmit={search}>
         <Phone size={20} />
-        <input value={phone} onChange={(event) => setPhone(event.target.value)} minLength={7} maxLength={24} inputMode="tel" placeholder="Votre numéro de téléphone" aria-label="Numéro de téléphone" required />
+        <input value={phone} onChange={(event) => setPhone(event.target.value)} minLength={4} maxLength={20} inputMode="tel" placeholder="Votre numéro GTAW (4 chiffres min.)" aria-label="Numéro de téléphone GTAW" required />
         <button className="button button-dark" disabled={loading}>{loading ? "Recherche…" : "Rechercher"}</button>
       </form>
       {error && <p className="form-error" role="alert">{error}</p>}
@@ -75,15 +77,22 @@ export function TrackOrder() {
                 ) : <p className="cancelled-note">Cette commande a été annulée. Contactez l’équipe pour plus d’informations.</p>}
                 <div className="tracked-details">
                   <div><span>Contenu</span>{order.order_items.map((item) => <p key={`${order.id}-${item.product_name}`}>{item.quantity}× {item.product_name}</p>)}</div>
-                  <div><span>Livraison</span><p>{order.delivery_location}</p></div>
+                  <div><span>Livraison</span><p>{order.delivery_location}</p>{order.desired_delivery_at && <p>Souhaitée le {formatDate(order.desired_delivery_at)}</p>}</div>
                   <div><span>Règlement</span><p>{order.payment_method === "cash" ? "Espèces" : "Carte"} · {order.payment_status === "paid" ? "Payé" : "À la livraison"}</p></div>
                   <div className="tracked-total"><span>Total</span><strong>{formatMoney(order.total)}</strong></div>
                 </div>
+                {order.invoices?.[0] && (
+                  <div className="tracked-invoice-action">
+                    <div><FileText size={18} /><span><strong>Facture disponible</strong><small>{order.invoices[0].invoice_number}</small></span></div>
+                    <button className="button button-light" type="button" onClick={() => setInvoiceOrder(order)}>Consulter la facture</button>
+                  </div>
+                )}
               </article>
             );
           })}
         </div>
       )}
+      {invoiceOrder?.invoices?.[0] && <InvoiceView invoice={invoiceOrder.invoices[0]} order={invoiceOrder} onClose={() => setInvoiceOrder(null)} />}
     </div>
   );
 }

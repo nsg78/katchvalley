@@ -11,6 +11,7 @@ export function Footer() {
         <div className="footer-links">
           <Link href="/#cuvees">Les cuvées</Link>
           <Link href="/suivi">Suivi de commande</Link>
+          <Link href="/recrutement">Recrutement</Link>
           <Link href="/admin">Espace équipe</Link>
         </div>
         <small>EL RANCHO BLVD · SOUTH LOS SANTOS</small>

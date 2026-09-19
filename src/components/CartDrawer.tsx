@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowRight, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
+import { ArrowRight, ShoppingBag, Trash2, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/components/CartProvider";
+import { QuantityInput } from "@/components/QuantityInput";
 import { formatMoney } from "@/lib/utils";
 
 export function CartDrawer() {
@@ -34,11 +35,11 @@ export function CartDrawer() {
                     <span>{line.product.category}</span>
                     <strong>{line.product.name}</strong>
                     <b>{formatMoney(line.product.price * line.quantity)}</b>
-                    <div className="quantity-control">
-                      <button onClick={() => setQuantity(line.product.id, line.quantity - 1)} aria-label="Retirer une unité"><Minus size={14} /></button>
-                      <span>{line.quantity}</span>
-                      <button onClick={() => setQuantity(line.product.id, line.quantity + 1)} aria-label="Ajouter une unité"><Plus size={14} /></button>
-                    </div>
+                    <QuantityInput
+                      quantity={line.quantity}
+                      onChange={(quantity) => setQuantity(line.product.id, quantity)}
+                      label={`Quantité de ${line.product.name}`}
+                    />
                   </div>
                   <button className="remove-line" onClick={() => remove(line.product.id)} aria-label={`Supprimer ${line.product.name}`}><Trash2 size={16} /></button>
                 </div>

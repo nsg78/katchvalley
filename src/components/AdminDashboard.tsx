@@ -3,6 +3,7 @@
 import {
   Bell,
   Boxes,
+  BriefcaseBusiness,
   ChevronDown,
   CircleDollarSign,
   ClipboardList,
@@ -21,7 +22,11 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { FALLBACK_PRODUCTS } from "@/lib/catalog";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import {
+  APPLICATION_ROLE_LABELS,
+  APPLICATION_STATUS_LABELS,
   STATUS_LABELS,
+  type ApplicationStatus,
+  type JobApplication,
   type Order,
   type OrderStatus,
   type PaymentStatus,
@@ -29,37 +34,51 @@ import {
 } from "@/lib/types";
 import { formatDate, formatMoney } from "@/lib/utils";
 
-type Tab = "orders" | "products";
+type Tab = "orders" | "products" | "applications";
 
 export function AdminDashboard() {
   const router = useRouter();
   const [token, setToken] = useState("");
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
+  const [applications, setApplications] = useState<JobApplication[]>([]);
   const [tab, setTab] = useState<Tab>("orders");
   const [statusFilter, setStatusFilter] = useState<string>("active");
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const knownOrderIds = useRef<Set<string>>(new Set());
+  const knownApplicationIds = useRef<Set<string>>(new Set());
   const firstLoad = useRef(true);
+  const authFailed = useRef(false);
+
+  const redirectToLogin = useCallback(async () => {
+    if (authFailed.current) return;
+    authFailed.current = true;
+    setToken("");
+    setLoading(false);
+    await getBrowserClient()?.auth.signOut();
+    router.replace("/admin?error=unauthorized");
+  }, [router]);
 
   const fetchData = useCallback(async (accessToken: string, quiet = false) => {
     if (!quiet) setLoading(true);
-    const [ordersResponse, productsResponse] = await Promise.all([
+    const isInitialLoad = firstLoad.current;
+    const [ordersResponse, productsResponse, applicationsResponse] = await Promise.all([
       fetch("/api/admin/orders", { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" }),
-      fetch("/api/admin/products", { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" })
+      fetch("/api/admin/products", { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" }),
+      fetch("/api/admin/applications", { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" })
     ]);
 
-    if (ordersResponse.status === 401 || productsResponse.status === 401) {
-      router.replace("/admin");
+    if (ordersResponse.status === 401 || productsResponse.status === 401 || applicationsResponse.status === 401) {
+      await redirectToLogin();
       return;
     }
 
     if (ordersResponse.ok) {
       const data = await ordersResponse.json();
       const incoming: Order[] = data.orders || [];
-      if (!firstLoad.current) {
+      if (!isInitialLoad) {
         const fresh = incoming.filter((order) => !knownOrderIds.current.has(order.id));
         if (fresh.length) {
           setToast(`${fresh.length} nouvelle${fresh.length > 1 ? "s" : ""} commande${fresh.length > 1 ? "s" : ""} reçue${fresh.length > 1 ? "s" : ""}`);
@@ -69,7 +88,6 @@ export function AdminDashboard() {
         }
       }
       knownOrderIds.current = new Set(incoming.map((order) => order.id));
-      firstLoad.current = false;
       setOrders(incoming);
     }
 
@@ -77,8 +95,20 @@ export function AdminDashboard() {
       const data = await productsResponse.json();
       if (data.products?.length) setProducts(data.products);
     }
+
+    if (applicationsResponse.ok) {
+      const data = await applicationsResponse.json();
+      const incoming: JobApplication[] = data.applications || [];
+      if (!isInitialLoad) {
+        const fresh = incoming.filter((application) => !knownApplicationIds.current.has(application.id));
+        if (fresh.length) setToast(`${fresh.length} nouvelle${fresh.length > 1 ? "s" : ""} candidature${fresh.length > 1 ? "s" : ""}`);
+      }
+      knownApplicationIds.current = new Set(incoming.map((application) => application.id));
+      setApplications(incoming);
+    }
+    firstLoad.current = false;
     setLoading(false);
-  }, [router]);
+  }, [redirectToLogin]);
 
   useEffect(() => {
     const supabase = getBrowserClient();
@@ -91,12 +121,24 @@ export function AdminDashboard() {
       setToken(data.session.access_token);
       fetchData(data.session.access_token);
     });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "TOKEN_REFRESHED" && session) setToken(session.access_token);
+    });
+    return () => authListener.subscription.unsubscribe();
   }, [fetchData, router]);
 
   useEffect(() => {
     if (!token) return;
-    const interval = window.setInterval(() => fetchData(token, true), 15000);
-    return () => window.clearInterval(interval);
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") fetchData(token, true);
+    };
+    const interval = window.setInterval(refreshWhenVisible, 30000);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
   }, [fetchData, token]);
 
   useEffect(() => {
@@ -124,6 +166,7 @@ export function AdminDashboard() {
     deliveredToday: orders.filter((order) => order.status === "delivered" && order.updated_at.startsWith(today)).length,
     pendingValue: orders.filter((order) => order.payment_status === "pending" && order.status !== "cancelled").reduce((sum, order) => sum + order.total, 0)
   };
+  const newApplications = applications.filter((application) => application.status === "new").length;
 
   async function updateOrder(id: string, updates: { status?: OrderStatus; paymentStatus?: PaymentStatus }) {
     const previous = orders;
@@ -160,6 +203,25 @@ export function AdminDashboard() {
     } else setToast("Catalogue mis à jour.");
   }
 
+  async function updateApplication(id: string, updates: { status?: ApplicationStatus; adminNotes?: string | null }) {
+    const previous = applications;
+    setApplications((current) => current.map((application) => application.id === id ? {
+      ...application,
+      ...(updates.status ? { status: updates.status } : {}),
+      ...(updates.adminNotes !== undefined ? { admin_notes: updates.adminNotes } : {})
+    } : application));
+
+    const response = await fetch("/api/admin/applications", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ id, ...updates })
+    });
+    if (!response.ok) {
+      setApplications(previous);
+      setToast("La candidature n’a pas pu être mise à jour.");
+    } else setToast("Candidature mise à jour.");
+  }
+
   async function logout() {
     await getBrowserClient()?.auth.signOut();
     router.replace("/admin");
@@ -179,6 +241,7 @@ export function AdminDashboard() {
         <nav>
           <button className={tab === "orders" ? "active" : ""} onClick={() => setTab("orders")}><ClipboardList />Commandes{metrics.newOrders > 0 && <b>{metrics.newOrders}</b>}</button>
           <button className={tab === "products" ? "active" : ""} onClick={() => setTab("products")}><Boxes />Catalogue</button>
+          <button className={tab === "applications" ? "active" : ""} onClick={() => setTab("applications")}><BriefcaseBusiness />Candidatures{newApplications > 0 && <b>{newApplications}</b>}</button>
         </nav>
         <div className="admin-sidebar-foot">
           <button onClick={enableNotifications}><Bell />Notifications</button>
@@ -188,7 +251,7 @@ export function AdminDashboard() {
 
       <section className="admin-main">
         <header className="admin-topbar">
-          <div><p className="section-kicker">Khatch &amp; Valley</p><h1>{tab === "orders" ? "Gestion des commandes" : "Gestion du catalogue"}</h1></div>
+          <div><p className="section-kicker">Khatch &amp; Valley</p><h1>{tab === "orders" ? "Gestion des commandes" : tab === "products" ? "Gestion du catalogue" : "Gestion des candidatures"}</h1></div>
           <button className="refresh-button" onClick={() => fetchData(token)} disabled={loading}><RefreshCw className={loading ? "spinning" : ""} />Actualiser</button>
         </header>
 
@@ -220,8 +283,10 @@ export function AdminDashboard() {
                   <div className="admin-order-details">
                     <div className="admin-order-info">
                       <div><span>Livraison</span><strong>{order.delivery_location}</strong></div>
+                      <div><span>Date souhaitée</span><strong>{order.desired_delivery_at ? formatDate(order.desired_delivery_at) : "Dès que possible"}</strong></div>
                       <div><span>Paiement prévu</span><strong>{order.payment_method === "cash" ? "Espèces" : "Carte"}</strong></div>
                       <div><span>Note client</span><strong>{order.notes || "Aucune instruction"}</strong></div>
+                      <div><span>Facture</span><strong>{order.invoices?.[0]?.invoice_number || "Créée au statut Livrée"}</strong></div>
                     </div>
                     <div className="admin-order-lines">
                       {order.order_items.map((item) => <div key={item.id || item.product_name}><span>{item.quantity}× {item.product_name}</span><strong>{formatMoney(item.subtotal)}</strong></div>)}
@@ -235,7 +300,7 @@ export function AdminDashboard() {
               ))}
             </div>
           </>
-        ) : (
+        ) : tab === "products" ? (
           <div className="admin-products">
             <div className="catalog-note"><Boxes /><div><strong>Catalogue de la boutique</strong><p>Les changements de prix et de disponibilité sont immédiatement visibles côté client.</p></div></div>
             <div className="admin-product-grid">
@@ -245,6 +310,34 @@ export function AdminDashboard() {
                   <div className="admin-product-copy"><span>{product.category}</span><h2>{product.name}</h2><p>{product.description}</p></div>
                   <label>Prix ($)<input type="number" min="0" max="100000" value={product.price} onChange={(event) => setProducts((current) => current.map((item) => item.id === product.id ? { ...item, price: Number(event.target.value) } : item))} onBlur={(event) => updateProduct(product.id, { price: Number(event.target.value) })} /></label>
                   <button className="availability-toggle" onClick={() => updateProduct(product.id, { active: !product.active })}>{product.active ? <><ToggleRight />Disponible</> : <><ToggleLeft />Masqué</>}</button>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="admin-applications">
+            <div className="catalog-note"><BriefcaseBusiness /><div><strong>Recrutement de la maison</strong><p>Classez les candidatures, gardez une note interne et contactez les profils retenus via leur numéro GTAW.</p></div></div>
+            <div className="application-mini-metrics">
+              <div><span>Nouvelles</span><strong>{newApplications}</strong></div>
+              <div><span>À étudier</span><strong>{applications.filter((application) => application.status === "reviewing").length}</strong></div>
+              <div><span>Retenues</span><strong>{applications.filter((application) => application.status === "accepted").length}</strong></div>
+            </div>
+            <div className="application-list">
+              {loading && !applications.length ? <div className="admin-empty">Chargement des candidatures…</div> : applications.length === 0 ? <div className="admin-empty">Aucune candidature reçue pour le moment.</div> : applications.map((application) => (
+                <article className="application-card" key={application.id}>
+                  <header>
+                    <div><span>{APPLICATION_ROLE_LABELS[application.role]}</span><h2>{application.applicant_name}</h2><p>{application.phone} · reçue le {formatDate(application.created_at)}</p></div>
+                    <i className={`application-status status-${application.status}`}>{APPLICATION_STATUS_LABELS[application.status]}</i>
+                  </header>
+                  <div className="application-body">
+                    <div><span>Disponibilités</span><p>{application.availability}</p></div>
+                    <div><span>Expérience</span><p>{application.experience || "Non renseignée"}</p></div>
+                    <div className="application-motivation"><span>Motivation</span><p>{application.motivation}</p></div>
+                  </div>
+                  <div className="application-actions">
+                    <label>État de la candidature<select value={application.status} onChange={(event) => updateApplication(application.id, { status: event.target.value as ApplicationStatus })}>{(Object.entries(APPLICATION_STATUS_LABELS) as [ApplicationStatus, string][]).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+                    <label>Note interne<textarea rows={3} maxLength={1000} value={application.admin_notes || ""} placeholder="Informations visibles uniquement par l’équipe" onChange={(event) => setApplications((current) => current.map((item) => item.id === application.id ? { ...item, admin_notes: event.target.value } : item))} onBlur={(event) => updateApplication(application.id, { adminNotes: event.target.value || null })} /></label>
+                  </div>
                 </article>
               ))}
             </div>

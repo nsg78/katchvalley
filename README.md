@@ -5,14 +5,25 @@ Boutique RP complète pour Vercel + Supabase, inspirée de la direction artistiq
 ## Fonctionnalités
 
 - Catalogue responsive avec les 8 cuvées de la maquette
-- Panier persistant, quantités et total recalculé côté serveur
+- Panier persistant, quantités saisissables au clavier ou avec les boutons +/−, total recalculé côté serveur
 - Commande sans paiement réel : préférence espèces ou carte, règlement à la livraison en jeu
-- Suivi des commandes par numéro de téléphone
-- Tableau de bord sécurisé : commandes, statuts, règlement et catalogue
-- Notification Discord facultative à chaque nouvelle commande
+- Date et heure de livraison souhaitées facultatives
+- Suivi des commandes par numéro GTAW (4 chiffres minimum)
+- Facture RP créée automatiquement au statut `Livrée`, consultable depuis le suivi par téléphone et imprimable en PDF
+- Espace recrutement : livreur, préparateur de commande et chargé d’affaires
+- Tableau de bord sécurisé : commandes, statuts, règlement, catalogue et candidatures
+- Notification Discord facultative à chaque nouvelle commande ou candidature
 - Alerte navigateur dans le panel admin et actualisation automatique toutes les 15 secondes
 - Affichage optimisé pour PC, mobile classique et petit WebView de téléphone FiveM
 - Row Level Security Supabase, clé `service_role` utilisée uniquement côté serveur
+
+## Mise à jour d’un site V1 déjà en ligne
+
+Avant de redéployer cette V2, ouvrir **Supabase > SQL Editor**, copier tout le fichier
+[`supabase/migrations/002_features_v2.sql`](supabase/migrations/002_features_v2.sql), puis l’exécuter une seule fois.
+
+Cette migration conserve les produits, commandes et comptes déjà présents. Elle ajoute la date souhaitée,
+les factures RP, les candidatures et la nouvelle limite de quantité. Aucune nouvelle variable Vercel n’est requise.
 
 ## 1. Créer le projet Supabase
 
@@ -54,6 +65,7 @@ npm run dev
 - Boutique : `http://localhost:3000`
 - Suivi : `http://localhost:3000/suivi`
 - Administration : `http://localhost:3000/admin`
+- Recrutement : `http://localhost:3000/recrutement`
 
 Sans variables Supabase, la boutique reste prévisualisable avec le catalogue local, mais la prise de commande et le panel admin sont volontairement désactivés.
 
@@ -67,7 +79,7 @@ Sans variables Supabase, la boutique reste prévisualisable avec le catalogue lo
 
 ## Notification Discord
 
-Dans Discord : **Paramètres du salon > Intégrations > Webhooks > Nouveau webhook**. Copier son URL dans `DISCORD_WEBHOOK_URL` sur Vercel. Chaque commande déclenchera un message comprenant le client, le téléphone, le contenu, le total, le mode de règlement et le point de livraison.
+Dans Discord : **Paramètres du salon > Intégrations > Webhooks > Nouveau webhook**. Copier son URL dans `DISCORD_WEBHOOK_URL` sur Vercel. Chaque commande déclenchera un message comprenant le client, le téléphone, le contenu, le total, le mode de règlement, le point de livraison et la date souhaitée. Les nouvelles candidatures sont également signalées dans ce salon.
 
 Le webhook reste côté serveur et n’est jamais envoyé au navigateur.
 
@@ -76,6 +88,7 @@ Le webhook reste côté serveur et n’est jamais envoyé au navigateur.
 `Reçue` → `En préparation` → `Prête` → `En livraison` → `Livrée`
 
 L’administrateur peut aussi passer une commande à `Annulée` et marquer séparément le règlement comme `Payé`.
+Le passage à `Livrée` génère une facture RP unique. Le client la retrouve ensuite dans `/suivi` avec son numéro de téléphone.
 
 ## Personnalisation rapide
 

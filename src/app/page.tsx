@@ -1,4 +1,4 @@
-import { ArrowRight, MapPin, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, BriefcaseBusiness, MapPin, ShieldCheck, Sparkles } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Footer } from "@/components/Footer";
@@ -90,6 +90,12 @@ export default function HomePage() {
             <span>El Rancho Blvd</span><span>South Los Santos</span><span>Sur commande</span>
           </div>
           <small>Sous la direction de <strong>Monsieur Khatchadourian</strong></small>
+        </section>
+
+        <section className="recruitment-cta content-width">
+          <span><BriefcaseBusiness size={22} /></span>
+          <div><p className="section-kicker">La maison recrute</p><h2>Livreur, préparateur ou chargé d’affaires&nbsp;?</h2><p>Présentez votre profil à l’équipe en quelques minutes.</p></div>
+          <Link className="button button-light" href="/recrutement">Voir les postes <ArrowRight size={17} /></Link>
         </section>
       </main>
       <Footer />

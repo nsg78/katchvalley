@@ -3,7 +3,9 @@ import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase/server";
 import { normalizePhone } from "@/lib/utils";
 
-const schema = z.object({ phone: z.string().trim().min(7).max(24) });
+const schema = z.object({
+  phone: z.string().trim().min(4).max(20).refine((value) => value.replace(/\D/g, "").length >= 4)
+});
 
 export async function POST(request: Request) {
   const supabase = getServiceClient();
@@ -18,7 +20,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await supabase
     .from("orders")
-    .select("id, order_number, customer_name, phone, delivery_location, notes, payment_method, payment_status, status, total, created_at, updated_at, order_items(*), order_status_history(*)")
+    .select("id, order_number, customer_name, phone, delivery_location, desired_delivery_at, notes, payment_method, payment_status, status, total, created_at, updated_at, order_items(*), order_status_history(*), invoices(*)")
     .eq("phone_normalized", phone)
     .order("created_at", { ascending: false })
     .limit(10);

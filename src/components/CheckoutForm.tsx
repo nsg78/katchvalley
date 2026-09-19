@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Banknote, Check, CreditCard, Minus, Plus, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Banknote, CalendarDays, Check, CreditCard, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
+import { QuantityInput } from "@/components/QuantityInput";
 import type { PaymentMethod } from "@/lib/types";
 import { formatMoney } from "@/lib/utils";
 
@@ -27,6 +28,9 @@ export function CheckoutForm() {
       customerName: form.get("customerName"),
       phone: form.get("phone"),
       deliveryLocation: form.get("deliveryLocation"),
+      desiredDeliveryAt: form.get("desiredDeliveryAt")
+        ? new Date(String(form.get("desiredDeliveryAt"))).toISOString()
+        : null,
       notes: form.get("notes"),
       website: form.get("website"),
       paymentMethod,
@@ -88,10 +92,11 @@ export function CheckoutForm() {
         <div className="form-section">
           <div className="form-section-title"><span>01</span><div><h2>Vos coordonnées</h2><p>Pour vous identifier et convenir de la livraison.</p></div></div>
           <div className="field-grid">
-            <label>Nom ou alias en jeu<input name="customerName" minLength={2} maxLength={80} required placeholder="Vardan Petrosyan" autoComplete="name" /></label>
-            <label>Numéro de téléphone<input name="phone" minLength={7} maxLength={24} required placeholder="555-0128" inputMode="tel" autoComplete="tel" /></label>
+            <label>Prénom Nom ou raison sociale<input name="customerName" minLength={2} maxLength={80} required placeholder="Prénom Nom ou raison sociale" autoComplete="name" /></label>
+            <label>Numéro de téléphone GTAW<input name="phone" minLength={4} maxLength={20} required placeholder="Ex. 4728" inputMode="tel" autoComplete="tel" /></label>
           </div>
           <label>Point de livraison souhaité<input name="deliveryLocation" maxLength={160} required placeholder="Adresse ou point de rendez-vous en jeu" /></label>
+          <label>Date et heure souhaitées <span className="optional">facultatif</span><span className="date-field-wrap"><CalendarDays size={17} /><input name="desiredDeliveryAt" type="datetime-local" /></span></label>
           <label>Instruction particulière <span className="optional">facultatif</span><textarea name="notes" maxLength={500} rows={4} placeholder="Créneau, personne à contacter, discrétion particulière…" /></label>
           <label className="honeypot" aria-hidden="true">Site web<input name="website" tabIndex={-1} autoComplete="off" /></label>
         </div>
@@ -117,11 +122,12 @@ export function CheckoutForm() {
           {lines.map((line) => (
             <div className="summary-line" key={line.product.id}>
               <div><strong>{line.product.name}</strong><span>{formatMoney(line.product.price)} l’unité</span></div>
-              <div className="quantity-control small">
-                <button type="button" onClick={() => setQuantity(line.product.id, line.quantity - 1)}><Minus size={13} /></button>
-                <span>{line.quantity}</span>
-                <button type="button" onClick={() => setQuantity(line.product.id, line.quantity + 1)}><Plus size={13} /></button>
-              </div>
+              <QuantityInput
+                quantity={line.quantity}
+                onChange={(quantity) => setQuantity(line.product.id, quantity)}
+                compact
+                label={`Quantité de ${line.product.name}`}
+              />
               <b>{formatMoney(line.product.price * line.quantity)}</b>
             </div>
           ))}

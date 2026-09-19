@@ -52,7 +52,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       if (existing) {
         return current.map((line) =>
           line.product.id === product.id
-            ? { ...line, quantity: Math.min(line.quantity + 1, 50) }
+            ? { ...line, quantity: Math.min(line.quantity + 1, 999) }
             : line
         );
       }
@@ -69,7 +69,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     if (quantity < 1) return remove(productId);
     setLines((current) =>
       current.map((line) =>
-        line.product.id === productId ? { ...line, quantity: Math.min(quantity, 50) } : line
+        line.product.id === productId ? { ...line, quantity: Math.min(quantity, 999) } : line
       )
     );
   }, [remove]);
