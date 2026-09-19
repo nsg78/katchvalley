@@ -12,6 +12,7 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
   const [added, setAdded] = useState(false);
 
   function addProduct() {
+    if (product.stock_count === 0) return;
     add(product);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1200);
@@ -39,8 +40,8 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
           {product.alcohol_pct && <span>{product.alcohol_pct}% vol.</span>}
         </div>
       </div>
-      <button className={added ? "add-button is-added" : "add-button"} onClick={addProduct}>
-        {added ? <><Check size={15} /> Ajouté</> : <><Plus size={15} /> Ajouter au panier</>}
+      <button className={added ? "add-button is-added" : "add-button"} onClick={addProduct} disabled={product.stock_count === 0}>
+        {product.stock_count === 0 ? "Indisponible" : added ? <><Check size={15} /> Ajouté</> : <><Plus size={15} /> Ajouter au panier</>}
       </button>
     </article>
   );

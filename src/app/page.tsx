@@ -68,7 +68,7 @@ export default function HomePage() {
             <h2>Votre commande, préparée avec soin.</h2>
             <p>
               Sélectionnez vos bouteilles, choisissez votre mode de règlement et payez seulement
-              à la livraison en jeu.
+              à la livraison.
             </p>
           </div>
           <Link className="button button-dark" href="/commande">

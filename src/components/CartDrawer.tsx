@@ -47,7 +47,7 @@ export function CartDrawer() {
             </div>
             <div className="cart-summary">
               <div><span>Sous-total</span><strong>{formatMoney(total)}</strong></div>
-              <p>Paiement à la livraison en jeu. Aucun débit sur ce site.</p>
+              <p>Paiement à la livraison.</p>
               <Link className="button button-dark button-full" href="/commande" onClick={() => setOpen(false)}>
                 Continuer la commande <ArrowRight size={17} />
               </Link>

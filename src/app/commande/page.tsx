@@ -13,7 +13,7 @@ export default function CheckoutPage() {
         <div className="page-intro">
           <p className="section-kicker">Salon de commande</p>
           <h1>Finaliser votre sélection.</h1>
-          <p>Aucun débit en ligne. Le règlement s’effectue à la livraison, en jeu.</p>
+          <p>Le règlement s’effectue directement à la livraison.</p>
         </div>
         <CheckoutForm />
       </main>

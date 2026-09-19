@@ -9,6 +9,8 @@ import {
   ClipboardList,
   LogOut,
   PackageCheck,
+  Pencil,
+  Plus,
   RefreshCw,
   Search,
   ShoppingBag,
@@ -19,6 +21,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StatusBadge } from "@/components/StatusBadge";
+import { ProductEditor } from "@/components/ProductEditor";
 import { FALLBACK_PRODUCTS } from "@/lib/catalog";
 import { getBrowserClient } from "@/lib/supabase/browser";
 import {
@@ -42,6 +45,7 @@ export function AdminDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>(FALLBACK_PRODUCTS);
   const [applications, setApplications] = useState<JobApplication[]>([]);
+  const [productEditor, setProductEditor] = useState<Product | "new" | null>(null);
   const [tab, setTab] = useState<Tab>("orders");
   const [statusFilter, setStatusFilter] = useState<string>("active");
   const [query, setQuery] = useState("");
@@ -203,6 +207,16 @@ export function AdminDashboard() {
     } else setToast("Catalogue mis à jour.");
   }
 
+  function productSaved(product: Product) {
+    setProducts((current) => {
+      const exists = current.some((item) => item.id === product.id);
+      const next = exists ? current.map((item) => item.id === product.id ? product : item) : [...current, product];
+      return next.sort((a, b) => a.sort_order - b.sort_order);
+    });
+    setProductEditor(null);
+    setToast("Catalogue mis à jour.");
+  }
+
   async function updateApplication(id: string, updates: { status?: ApplicationStatus; adminNotes?: string | null }) {
     const previous = applications;
     setApplications((current) => current.map((application) => application.id === id ? {
@@ -302,21 +316,25 @@ export function AdminDashboard() {
           </>
         ) : tab === "products" ? (
           <div className="admin-products">
-            <div className="catalog-note"><Boxes /><div><strong>Catalogue de la boutique</strong><p>Les changements de prix et de disponibilité sont immédiatement visibles côté client.</p></div></div>
+            <div className="catalog-note catalog-note-actions"><Boxes /><div><strong>Catalogue de la boutique</strong><p>Ajoutez un alcool ou modifiez entièrement une fiche existante.</p></div><button className="button button-dark" type="button" onClick={() => setProductEditor("new")}><Plus size={16} />Ajouter un alcool</button></div>
             <div className="admin-product-grid">
               {products.map((product) => (
                 <article className={product.active ? "admin-product" : "admin-product inactive"} key={product.id}>
                   <div className="admin-product-image"><Image src={product.image_path} alt="" fill sizes="50px" /></div>
                   <div className="admin-product-copy"><span>{product.category}</span><h2>{product.name}</h2><p>{product.description}</p></div>
                   <label>Prix ($)<input type="number" min="0" max="100000" value={product.price} onChange={(event) => setProducts((current) => current.map((item) => item.id === product.id ? { ...item, price: Number(event.target.value) } : item))} onBlur={(event) => updateProduct(product.id, { price: Number(event.target.value) })} /></label>
-                  <button className="availability-toggle" onClick={() => updateProduct(product.id, { active: !product.active })}>{product.active ? <><ToggleRight />Disponible</> : <><ToggleLeft />Masqué</>}</button>
+                  <div className="admin-product-actions">
+                    <button className="edit-product-button" type="button" onClick={() => setProductEditor(product)}><Pencil />Modifier la fiche</button>
+                    <button className="availability-toggle" type="button" onClick={() => updateProduct(product.id, { active: !product.active })}>{product.active ? <><ToggleRight />Disponible</> : <><ToggleLeft />Masqué</>}</button>
+                  </div>
                 </article>
               ))}
             </div>
+            {productEditor && <ProductEditor key={productEditor === "new" ? "new" : productEditor.id} product={productEditor === "new" ? null : productEditor} token={token} nextSortOrder={Math.max(0, ...products.map((product) => product.sort_order)) + 1} onClose={() => setProductEditor(null)} onSaved={productSaved} />}
           </div>
         ) : (
           <div className="admin-applications">
-            <div className="catalog-note"><BriefcaseBusiness /><div><strong>Recrutement de la maison</strong><p>Classez les candidatures, gardez une note interne et contactez les profils retenus via leur numéro GTAW.</p></div></div>
+            <div className="catalog-note"><BriefcaseBusiness /><div><strong>Recrutement de la maison</strong><p>Classez les candidatures, gardez une note interne et contactez les profils retenus par téléphone.</p></div></div>
             <div className="application-mini-metrics">
               <div><span>Nouvelles</span><strong>{newApplications}</strong></div>
               <div><span>À étudier</span><strong>{applications.filter((application) => application.status === "reviewing").length}</strong></div>

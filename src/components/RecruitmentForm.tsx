@@ -49,7 +49,7 @@ export function RecruitmentForm() {
         <CheckCircle2 size={35} />
         <p className="section-kicker">Candidature reçue</p>
         <h2>Merci pour votre intérêt.</h2>
-        <p>L’équipe étudiera votre profil et vous contactera sur votre numéro GTAW si elle souhaite poursuivre.</p>
+        <p>L’équipe étudiera votre profil et vous contactera par téléphone si elle souhaite poursuivre.</p>
         <button className="text-button" type="button" onClick={() => setSent(false)}>Envoyer une autre candidature</button>
       </div>
     );
@@ -59,8 +59,8 @@ export function RecruitmentForm() {
     <form className="recruitment-form" onSubmit={submit}>
       <div className="form-section-title"><span>01</span><div><h2>Votre candidature</h2><p>Quelques informations suffisent pour faire connaissance.</p></div></div>
       <div className="field-grid">
-        <label>Prénom Nom ou raison sociale<input name="applicantName" minLength={2} maxLength={80} required placeholder="Votre identité en jeu" autoComplete="name" /></label>
-        <label>Numéro de téléphone GTAW<input name="phone" minLength={4} maxLength={20} required placeholder="Ex. 4728" inputMode="tel" autoComplete="tel" /></label>
+        <label>Prénom Nom ou raison sociale<input name="applicantName" minLength={2} maxLength={80} required placeholder="Prénom Nom ou raison sociale" autoComplete="name" /></label>
+        <label>Numéro de téléphone<input name="phone" minLength={4} maxLength={20} required placeholder="Ex. 4728" inputMode="tel" autoComplete="tel" /></label>
       </div>
       <label>Poste recherché
         <select name="role" defaultValue="delivery_driver" required>
@@ -73,7 +73,6 @@ export function RecruitmentForm() {
       <label className="honeypot" aria-hidden="true">Site web<input name="website" tabIndex={-1} autoComplete="off" /></label>
       {error && <p className="form-error" role="alert">{error}</p>}
       <button className="button button-dark" type="submit" disabled={loading}>{loading ? "Transmission…" : <>Envoyer ma candidature <ArrowRight size={17} /></>}</button>
-      <p className="recruitment-privacy">Les informations sont utilisées uniquement par l’équipe Khatch &amp; Valley dans le cadre du recrutement RP.</p>
     </form>
   );
 }

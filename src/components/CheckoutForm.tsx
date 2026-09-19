@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Banknote, CalendarDays, Check, CreditCard, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Banknote, CalendarDays, Check, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
@@ -93,25 +93,24 @@ export function CheckoutForm() {
           <div className="form-section-title"><span>01</span><div><h2>Vos coordonnées</h2><p>Pour vous identifier et convenir de la livraison.</p></div></div>
           <div className="field-grid">
             <label>Prénom Nom ou raison sociale<input name="customerName" minLength={2} maxLength={80} required placeholder="Prénom Nom ou raison sociale" autoComplete="name" /></label>
-            <label>Numéro de téléphone GTAW<input name="phone" minLength={4} maxLength={20} required placeholder="Ex. 4728" inputMode="tel" autoComplete="tel" /></label>
+            <label>Numéro de téléphone<input name="phone" minLength={4} maxLength={20} required placeholder="Ex. 4728" inputMode="tel" autoComplete="tel" /></label>
           </div>
-          <label>Point de livraison souhaité<input name="deliveryLocation" maxLength={160} required placeholder="Adresse ou point de rendez-vous en jeu" /></label>
+          <label>Point de livraison souhaité<input name="deliveryLocation" maxLength={160} required placeholder="Adresse ou point de rendez-vous" /></label>
           <label>Date et heure souhaitées <span className="optional">facultatif</span><span className="date-field-wrap"><CalendarDays size={17} /><input name="desiredDeliveryAt" type="datetime-local" /></span></label>
           <label>Instruction particulière <span className="optional">facultatif</span><textarea name="notes" maxLength={500} rows={4} placeholder="Créneau, personne à contacter, discrétion particulière…" /></label>
           <label className="honeypot" aria-hidden="true">Site web<input name="website" tabIndex={-1} autoComplete="off" /></label>
         </div>
 
         <div className="form-section">
-          <div className="form-section-title"><span>02</span><div><h2>Règlement à la livraison</h2><p>Choisissez le moyen que vous utiliserez en jeu.</p></div></div>
+          <div className="form-section-title"><span>02</span><div><h2>Règlement à la livraison</h2><p>Choisissez votre moyen de règlement.</p></div></div>
           <div className="payment-options">
             <button type="button" className={paymentMethod === "cash" ? "payment-option selected" : "payment-option"} onClick={() => setPaymentMethod("cash")}>
               <Banknote /><span><strong>Espèces</strong><small>À remettre au livreur</small></span><i>{paymentMethod === "cash" && <Check size={14} />}</i>
             </button>
             <button type="button" className={paymentMethod === "card" ? "payment-option selected" : "payment-option"} onClick={() => setPaymentMethod("card")}>
-              <CreditCard /><span><strong>Carte</strong><small>Paiement en jeu à la livraison</small></span><i>{paymentMethod === "card" && <Check size={14} />}</i>
+              <CreditCard /><span><strong>Carte</strong><small>À régler à la livraison</small></span><i>{paymentMethod === "card" && <Check size={14} />}</i>
             </button>
           </div>
-          <div className="no-charge-note"><ShieldCheck size={18} /><p><strong>Aucune transaction bancaire réelle.</strong> Ce site enregistre uniquement votre préférence de règlement pour la livraison en jeu.</p></div>
         </div>
       </div>
 
@@ -137,7 +136,7 @@ export function CheckoutForm() {
         <button className="button button-dark button-full" type="submit" disabled={loading}>
           {loading ? "Transmission…" : <>Confirmer la commande <ArrowRight size={17} /></>}
         </button>
-        <p className="summary-footnote">En confirmant, vous envoyez une demande de commande. L’équipe vous contactera en jeu si nécessaire.</p>
+        <p className="summary-footnote">En confirmant, vous envoyez une demande de commande. L’équipe vous contactera si nécessaire.</p>
       </aside>
     </form>
   );

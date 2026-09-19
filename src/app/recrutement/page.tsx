@@ -7,7 +7,7 @@ import { RecruitmentForm } from "@/components/RecruitmentForm";
 export const metadata: Metadata = { title: "Recrutement" };
 
 const roles = [
-  { icon: Truck, title: "Livreur", text: "Assurer les tournées, le contact client et la remise des commandes en jeu." },
+  { icon: Truck, title: "Livreur", text: "Assurer les tournées, le contact client et la remise des commandes." },
   { icon: PackageCheck, title: "Préparateur de commande", text: "Préparer les cuvées avec rigueur et coordonner les départs en livraison." },
   { icon: BriefcaseBusiness, title: "Chargé d’affaires", text: "Développer les relations professionnelles et les commandes de volume." }
 ];
@@ -27,7 +27,6 @@ export default function RecruitmentPage() {
             {roles.map(({ icon: Icon, title, text }) => (
               <article className="role-card" key={title}><span><Icon size={20} /></span><div><h2>{title}</h2><p>{text}</p></div></article>
             ))}
-            <p className="role-note">Candidatures roleplay uniquement. Aucun emploi ni paiement réel.</p>
           </aside>
           <RecruitmentForm />
         </div>

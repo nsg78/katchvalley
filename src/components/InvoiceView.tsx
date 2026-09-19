@@ -31,8 +31,6 @@ export function InvoiceView({
             <div className="invoice-title"><p>Facture</p><strong>{invoice.invoice_number}</strong></div>
           </header>
 
-          <p className="invoice-rp-notice">DOCUMENT ROLEPLAY · SANS VALEUR FISCALE RÉELLE</p>
-
           <div className="invoice-parties">
             <div>
               <span>Émetteur</span>
@@ -49,7 +47,7 @@ export function InvoiceView({
           <div className="invoice-meta">
             <div><span>Date d’émission</span><strong>{formatDate(invoice.issued_at)}</strong></div>
             <div><span>Commande</span><strong>{order.order_number}</strong></div>
-            <div><span>Règlement en jeu</span><strong>{invoice.payment_method === "cash" ? "Espèces" : "Carte"}</strong></div>
+            <div><span>Mode de règlement</span><strong>{invoice.payment_method === "cash" ? "Espèces" : "Carte"}</strong></div>
           </div>
 
           <div className="invoice-table-wrap">

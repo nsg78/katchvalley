@@ -18,6 +18,12 @@ const orderSchema = z.object({
   })).min(1).max(20)
 });
 
+function isLegacyDatabaseError(error: { code?: string; message?: string } | null) {
+  if (!error) return false;
+  return ["PGRST202", "42883"].includes(error.code || "")
+    || /p_desired_delivery_at|could not find the function/i.test(error.message || "");
+}
+
 export async function POST(request: Request) {
   const supabase = getServiceClient();
   if (!supabase) {
@@ -34,15 +40,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Certaines informations de la commande sont invalides." }, { status: 400 });
   }
 
-  const { data: placed, error: placeError } = await supabase.rpc("place_order", {
+  const rpcItems = payload.items.map((item) => ({ product_id: item.productId, quantity: item.quantity }));
+  const modernResult = await supabase.rpc("place_order", {
     p_customer_name: payload.customerName,
     p_phone: payload.phone,
     p_delivery_location: payload.deliveryLocation,
     p_desired_delivery_at: payload.desiredDeliveryAt,
     p_payment_method: payload.paymentMethod,
     p_notes: payload.notes || null,
-    p_items: payload.items.map((item) => ({ product_id: item.productId, quantity: item.quantity }))
+    p_items: rpcItems
   });
+  let placed = modernResult.data;
+  let placeError = modernResult.error;
+
+  if (isLegacyDatabaseError(placeError)) {
+    const legacyResult = await supabase.rpc("place_order", {
+      p_customer_name: payload.customerName,
+      p_phone: payload.phone,
+      p_delivery_location: payload.deliveryLocation,
+      p_payment_method: payload.paymentMethod,
+      p_notes: payload.notes || null,
+      p_items: rpcItems
+    });
+    placed = legacyResult.data;
+    placeError = legacyResult.error;
+  }
 
   if (placeError || !placed?.id) {
     console.error("place_order failed", placeError);

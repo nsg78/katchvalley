@@ -12,6 +12,7 @@ Boutique RP complète pour Vercel + Supabase, inspirée de la direction artistiq
 - Facture RP créée automatiquement au statut `Livrée`, consultable depuis le suivi par téléphone et imprimable en PDF
 - Espace recrutement : livreur, préparateur de commande et chargé d’affaires
 - Tableau de bord sécurisé : commandes, statuts, règlement, catalogue et candidatures
+- Catalogue administrable : ajout d’alcools, modification complète des fiches et téléversement des images
 - Notification Discord facultative à chaque nouvelle commande ou candidature
 - Alerte navigateur dans le panel admin et actualisation automatique toutes les 15 secondes
 - Affichage optimisé pour PC, mobile classique et petit WebView de téléphone FiveM
@@ -24,6 +25,10 @@ Avant de redéployer cette V2, ouvrir **Supabase > SQL Editor**, copier tout le 
 
 Cette migration conserve les produits, commandes et comptes déjà présents. Elle ajoute la date souhaitée,
 les factures RP, les candidatures et la nouvelle limite de quantité. Aucune nouvelle variable Vercel n’est requise.
+
+Exécuter ensuite [`supabase/migrations/003_catalog_admin.sql`](supabase/migrations/003_catalog_admin.sql)
+pour autoriser l’ajout d’images depuis le catalogue admin. Cette migration crée uniquement le bucket public
+`product-images` limité aux images PNG, JPG et WebP de 5 Mo maximum.
 
 ## 1. Créer le projet Supabase
 

@@ -46,7 +46,7 @@ export function TrackOrder() {
     <div className="tracking-shell">
       <form className="tracking-search" onSubmit={search}>
         <Phone size={20} />
-        <input value={phone} onChange={(event) => setPhone(event.target.value)} minLength={4} maxLength={20} inputMode="tel" placeholder="Votre numéro GTAW (4 chiffres min.)" aria-label="Numéro de téléphone GTAW" required />
+        <input value={phone} onChange={(event) => setPhone(event.target.value)} minLength={4} maxLength={20} inputMode="tel" placeholder="Votre numéro de téléphone" aria-label="Numéro de téléphone" required />
         <button className="button button-dark" disabled={loading}>{loading ? "Recherche…" : "Rechercher"}</button>
       </form>
       {error && <p className="form-error" role="alert">{error}</p>}

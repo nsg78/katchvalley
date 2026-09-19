@@ -14,9 +14,9 @@ export async function GET() {
     .eq("active", true)
     .order("sort_order", { ascending: true });
 
-  if (error || !data?.length) {
+  if (error) {
     return NextResponse.json({ products: FALLBACK_PRODUCTS, source: "fallback" });
   }
 
-  return NextResponse.json({ products: data, source: "supabase" });
+  return NextResponse.json({ products: data || [], source: "supabase" });
 }

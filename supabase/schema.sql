@@ -322,6 +322,19 @@ alter table public.admin_profiles enable row level security;
 alter table public.invoices enable row level security;
 alter table public.job_applications enable row level security;
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'product-images',
+  'product-images',
+  true,
+  5242880,
+  array['image/png', 'image/jpeg', 'image/webp']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
 drop policy if exists "public can read active products" on public.products;
 create policy "public can read active products"
 on public.products for select to anon, authenticated
