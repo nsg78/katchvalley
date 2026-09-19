@@ -1,0 +1,17 @@
+{
+  "name": "Khatch & Valley Brewstillery",
+  "short_name": "K&V",
+  "description": "Cuvées artisanales de South Los Santos.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f3ed",
+  "theme_color": "#201d1a",
+  "icons": [
+    {
+      "src": "/brand-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
