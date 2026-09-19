@@ -87,6 +87,9 @@ export function TrackOrder() {
                     <button className="button button-light" type="button" onClick={() => setInvoiceOrder(order)}>Consulter la facture</button>
                   </div>
                 )}
+                {order.status === "delivered" && !order.invoices?.[0] && (
+                  <div className="invoice-pending-note">La facture est en cours de génération. Actualisez le suivi ou <a href="https://discord.gg/MWBBcSjg3U" target="_blank" rel="noreferrer">contactez notre assistance</a>.</div>
+                )}
               </article>
             );
           })}

@@ -55,6 +55,9 @@ as $$
     lpad(nextval('public.invoice_number_seq')::text, 4, '0');
 $$;
 
+revoke all on function public.next_invoice_number() from public, anon, authenticated;
+grant execute on function public.next_invoice_number() to service_role;
+
 create or replace function public.create_order_invoice()
 returns trigger
 language plpgsql

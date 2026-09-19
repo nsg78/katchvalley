@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Banknote, CalendarDays, Check, CreditCard } from "lucide-react";
+import { ArrowLeft, ArrowRight, Banknote, BellRing, CalendarDays, Check, CreditCard, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useCart } from "@/components/CartProvider";
@@ -68,6 +68,10 @@ export function CheckoutForm() {
           Total à régler à la livraison : <strong>{formatMoney(success.total)}</strong>.<br />
           Conservez votre numéro de téléphone pour suivre l’avancement.
         </p>
+        <div className="success-contact-note">
+          <BellRing size={19} />
+          <p><strong>Notre équipe vient d’être prévenue.</strong> Nous reviendrons vers vous sur le numéro renseigné. Pour toute question, vous pouvez aussi rejoindre le <a href="https://discord.gg/MWBBcSjg3U" target="_blank" rel="noreferrer">Discord Katch Valley <MessageCircle size={13} /></a>.</p>
+        </div>
         <div className="success-actions">
           <Link className="button button-dark" href="/suivi">Suivre la commande <ArrowRight size={17} /></Link>
           <Link className="button button-light" href="/">Retour à l’accueil</Link>
@@ -133,10 +137,11 @@ export function CheckoutForm() {
         </div>
         <div className="summary-total"><span>Total à la livraison</span><strong>{formatMoney(total)}</strong></div>
         {error && <p className="form-error" role="alert">{error}</p>}
+        <div className="order-notification-note"><BellRing size={17} /><p>À réception de votre commande, notre équipe est automatiquement prévenue et reviendra vers vous sur le numéro renseigné.</p></div>
         <button className="button button-dark button-full" type="submit" disabled={loading}>
           {loading ? "Transmission…" : <>Confirmer la commande <ArrowRight size={17} /></>}
         </button>
-        <p className="summary-footnote">En confirmant, vous envoyez une demande de commande. L’équipe vous contactera si nécessaire.</p>
+        <p className="summary-footnote">Besoin d’aide ? <Link href="/assistance">Contactez notre service client.</Link></p>
       </aside>
     </form>
   );

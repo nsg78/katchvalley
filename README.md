@@ -30,6 +30,10 @@ Exécuter ensuite [`supabase/migrations/003_catalog_admin.sql`](supabase/migrati
 pour autoriser l’ajout d’images depuis le catalogue admin. Cette migration crée uniquement le bucket public
 `product-images` limité aux images PNG, JPG et WebP de 5 Mo maximum.
 
+Si une commande déjà livrée ne possède pas de facture, exécuter
+[`supabase/migrations/004_invoice_repair.sql`](supabase/migrations/004_invoice_repair.sql).
+Le script recrée le déclencheur si nécessaire et génère les factures manquantes.
+
 ## 1. Créer le projet Supabase
 
 1. Créer un nouveau projet sur Supabase.
